@@ -1,0 +1,4 @@
+See file:///mnt/Programming/git/RoboUtil/build/tmp/linkTest/output.txt for all output for linkTest.
+linking RoboUtilTest successful.
+
+Finished linkTest, see full log file:///mnt/Programming/git/RoboUtil/build/tmp/linkTest/output.txt.

@@ -1,0 +1,6 @@
+See file:///mnt/Programming/git/RoboUtil/build/tmp/compileDebugCpp/output.txt for all output for compileDebugCpp.
+compiling greeter.cpp successful.
+
+compiling Path.cpp successful.
+
+Finished compileDebugCpp, see full log file:///mnt/Programming/git/RoboUtil/build/tmp/compileDebugCpp/output.txt.
