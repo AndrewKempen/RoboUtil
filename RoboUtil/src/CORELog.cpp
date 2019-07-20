@@ -16,6 +16,7 @@ string CORELog::getFileName() {
     time_t currentTime = time(0);
     struct tm* now = localtime(&currentTime);
 	string fileName = "";
+
     fileName += to_string(now->tm_mon) + "-" + to_string(now->tm_mday) + "--" + to_string(now->tm_hour)
                   + "-" + to_string(now->tm_min) + ".txt";
     return fileName;

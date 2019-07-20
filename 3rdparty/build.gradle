@@ -1,0 +1,44 @@
+apply plugin: "cpp"
+
+import edu.wpi.first.toolchain.NativePlatforms
+
+
+ext.libroot = new File(rootProject.rootDir, "3rdparty")
+ext.gtest_root = new File(libroot, "googletest/googletest")
+ext.json_root = new File(libroot, "json")
+
+ext.googletest_version = "1.8.1"
+
+model {
+    buildTypes {
+        release
+        debug
+    }
+
+    components {
+        googleTest(NativeLibrarySpec) {
+            sources.cpp {
+                source {
+                    srcDir new File(gtest_root, "src")
+                    include "**/gtest-all.cc"
+                }
+                exportedHeaders {
+                    srcDirs gtest_root, new File(gtest_root, "include")
+                    include "**/*.hpp", "**/*.h"
+                }
+            }
+        }
+        json(NativeLibrarySpec) {
+            sources.cpp {
+                source {
+                    srcDir ext.json_root
+                    include "**/*.hpp"
+                }
+                exportedHeaders {
+                    srcDirs ext.json_root
+                    include "**/*.hpp"
+                }
+            }
+        }
+    }
+}

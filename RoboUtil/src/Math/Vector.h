@@ -8,8 +8,8 @@ public:
 	Vector(double r, double theta);
 	Vector(const Vector& other);
     double GetCompassDegrees();
-  	double GetX();
-  	double GetY();
+  	double GetDX();
+  	double GetDY();
 	static Vector FromCompassDegrees(double compassDegrees, double mag = 1);
 	static Vector FromRadians(double radians, double mag = 1);
 	static Vector FromDegrees(double degrees, double mag = 1);

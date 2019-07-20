@@ -8,3 +8,5 @@
  */
 
 rootProject.name = 'RoboUtil'
+
+include '3rdparty', 'RoboUtil'

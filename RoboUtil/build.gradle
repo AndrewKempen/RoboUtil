@@ -1,0 +1,70 @@
+plugins {
+    id 'cpp'
+    id 'google-test-test-suite'
+}
+
+import edu.wpi.first.toolchain.NativePlatforms
+
+model {
+    platforms {
+        vex {
+            operatingSystem 'linux'
+            architecture 'arm'
+        }
+        amd64 {
+            architecture 'amd64'
+        }
+    }
+    binaries {
+        all {
+            if (!(toolChain instanceof Clang) && targetPlatform.name == edu.wpi.first.toolchain.NativePlatforms.desktop)
+                println "WARNING: Not using Clang. Additional warnings and sanitation may be missing."
+            lib project: ":3rdparty", library: "json", linkage: "static"
+        }
+    }
+    components {
+        roboUtil(NativeLibrarySpec) {
+            sources.cpp {
+                source {
+                    srcDir 'src'
+                    include '**/*.cpp'
+                }
+                exportedHeaders {
+                    srcDir 'src'
+                    include '**/*.h'
+                }
+            }
+        }
+    }
+    testSuites {
+        roboUtilTest(GoogleTestTestSuiteSpec) {
+            testing $.components.roboUtil
+
+            binaries.all {
+                if (toolChain instanceof GccCompatibleToolChain) {
+                    linker.args << '-pthread'
+
+                    if (toolChain instanceof Clang && targetPlatform.name == edu.wpi.first.toolchain.NativePlatforms.desktop) {
+                        cppCompiler.args << '-fsanitize=address'
+                        linker.args << '-fsanitize=address'
+                    }
+                }
+
+                if(targetPlatform.name != edu.wpi.first.toolchain.NativePlatforms.desktop) {
+                    buildable = false
+                }
+            }
+
+            sources.cpp {
+                source {
+                    srcDir 'test'
+                    include '**/*.cpp'
+                }
+                exportedHeaders {
+                    srcDir 'test'
+                    include '**/*.h'
+                }
+            }
+        }
+    }
+}

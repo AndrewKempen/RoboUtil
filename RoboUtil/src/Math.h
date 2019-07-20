@@ -4,7 +4,7 @@
 #include <iostream>
 
 #define PI 3.141592653589793
-#define kE .000000001
+#define kEpsilon .000000001
 
 using namespace std;
 

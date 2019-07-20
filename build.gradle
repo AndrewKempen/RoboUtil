@@ -1,69 +1,113 @@
 plugins {
-    id 'cpp-library'
-    id 'maven-publish'
-    id 'cpp-unit-test'
+    id 'com.gradle.build-scan' version '2.0.2'
+    id 'edu.wpi.first.Toolchain' version '2019.1.1-beta-3-pre4' apply false
+    id "jaci.gradle.EmbeddedTools" version "2019.6.16"
+    id "edu.wpi.first.GradleRIO" version "2019.2.1"
 }
 
-group = 'org.gradle.cpp-samples'
-version = '1.5'
+import org.gradle.internal.os.OperatingSystem
+import edu.wpi.first.toolchain.NativePlatforms
 
-repositories {
-    maven {
-        url = 'https://repo.gradle.org/gradle/libs-snapshots-local/'
+task subclean();
+
+allprojects {
+    plugins.withType(CppPlugin).whenPluginAdded {
+        project.apply plugin: 'edu.wpi.first.Toolchain'
+
+        toolchainsPlugin.withRaspbian()
+        toolchainsPlugin.withRoboRIO()
+
+        toolchainsPlugin.getByName('roboRio').optional = true
+
+        rootProject.tasks.subclean.dependsOn tasks.clean
+
+        ext.desktop32Classifier = NativePlatforms.desktopOS()
+
+        project.model {
+            buildTypes {
+                release
+                debug
+            }
+            platforms {
+                "${desktop32Classifier}" {
+                    architecture 'amd64'
+                }
+
+                vex {
+                    architecture 'vex'
+                }
+            }
+            toolChains {
+                msvc(VisualCpp)
+                // Define Clang first - for ASAN (Default)
+                clang(Clang)
+                gcc(Gcc)
+                roborio(edu.wpi.first.toolchain.roborio.RoboRioGcc)
+                raspbian(edu.wpi.first.toolchain.raspbian.RaspbianGcc)
+                vex(Gcc) {
+                    setTargets('vex')
+                    eachPlatform {
+                        cCompiler.executable = 'arm-none-eabi-gcc'
+                        staticLibArchiver.executable = 'arm-none-eabi-ar'
+                        linker.executable = 'arm-none-eabi-ld'
+
+                        // Here we're just simply telling Gradle that we want to compile with C++11.
+                        linker.withArguments { a -> a << '-std=c++14'}
+                    }
+                }
+
+            }
+            components {
+                withType(TargetedNativeComponent) {
+                    targetPlatform NativePlatforms.desktop
+                    targetPlatform NativePlatforms.raspbian
+                    targetPlatform NativePlatforms.roborio
+                    targetPlatform 'vex'
+                }
+            }
+            binaries {
+                withType(NativeBinarySpec) {
+                    if (toolChain instanceof GccCompatibleToolChain) {
+                        cppCompiler.args << '-std=c++14' << '-O2' << '-Werror'
+
+                        if (buildType == buildTypes.debug) {
+                            cppCompiler.args "-g"
+                        }
+                    } else {
+                        // MSVC
+                        cppCompiler.args << '/std:c++14' << '/O2'
+
+                        if (buildType == buildTypes.debug) {
+                            cppCompiler.args << '/Zi' << '/FS'
+                            cppCompiler.define 'DEBUG'
+                            linker.args '/DEBUG'
+                        }
+                    }
+                }
+            }
+        }
     }
-}
+    plugins.withType(GoogleTestPlugin).whenPluginAdded {
+        model {
+            binaries {
+                withType(GoogleTestTestSuiteBinarySpec) {
+                    lib project: ":3rdparty", library: "googleTest", linkage: "static"
 
-// Also, as the Gradle publishing format for C++ is not yet stable, encode the Gradle metadata version in the module as well
-// None of this will be necessarily in later releases and Gradle will take care of these things instead
-unitTest {
-    binaries.whenElementFinalized {
-        def metadataFormat = org.gradle.api.internal.artifacts.ivyservice.ivyresolve.parser.ModuleMetadataParser.FORMAT_VERSION
+                    boolean applies = false
+                    if (targetPlatform.name == edu.wpi.first.toolchain.NativePlatforms.desktop)
+                        applies = true
 
-        dependencies {
-            implementation "org.gradle.cpp-samples:googletest_${metadataFormat}:latest.integration"
+                    if (!applies) {
+                        tasks.withType(RunTestExecutable) { RunTestExecutable task ->
+                            task.enabled = false
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
-tasks.withType(CppCompile) {
-    // Use C++03 with the old ABIs, as this is what the googletest binaries were built with
-    // Later, Gradle's dependency management will understand ABI
-    macros _GLIBCXX_USE_CXX11_ABI: '0'
-
-    compilerArgs.addAll toolChain.map { NativeToolChain toolChain ->
-        List<String> compilerSpecificArgs = []
-        if (toolChain instanceof Gcc) {
-            compilerSpecificArgs << '-std=c++11'
-        } else {
-            compilerSpecificArgs << '-std=c++11'
-        }
-        return compilerSpecificArgs
-    }
-}
-
-tasks.withType(LinkSharedLibrary) {
-    linkerArgs.addAll toolChain.map { NativeToolChain toolChain ->
-        List<String> compilerSpecificArgs = []
-        if (toolChain instanceof Gcc) {
-            compilerSpecificArgs << '-std=c++11'
-        } else {
-            compilerSpecificArgs << '-std=c++11'
-        }
-        return compilerSpecificArgs
-    }
-}
-
-task copyToLibDir(type: Copy) {
-    from "build/lib/main/debug/"
-    into "lib"
-}
-
-build.finalizedBy copyToLibDir
-
-publishing {
-    repositories {
-        maven {
-            url = '../repo'
-        }
-    }
+wrapper {
+    gradleVersion = '5.0'
 }

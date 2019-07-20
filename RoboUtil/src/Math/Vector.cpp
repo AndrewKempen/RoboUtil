@@ -1,4 +1,4 @@
-#include "Vector.h"
+#include "Math/Vector.h"
 
 Vector::Vector() {
     m_theta = 0;
@@ -81,11 +81,11 @@ Vector Vector::InterpolateRotation(Vector other, double x) {
     return RotateBy(FromRadians(diff * x));
 }
 
-double Vector::GetX() {
+double Vector::GetDX() {
     return cos(m_theta) * m_r;
 }
 
-double Vector::GetY() {
+double Vector::GetDY() {
     return sin(m_theta) * m_r;
 }
 
@@ -121,7 +121,7 @@ Vector Vector::InterpolateMagnitude(Vector other, double x) {
 }
 
 Vector Vector::Extrapolate(Vector other, double x) {
-    return FromXY(x * (other.GetX() - GetX()) + GetX(), x * (other.GetY() - GetY()) + GetY());
+    return FromXY(x * (other.GetDX() - GetDX()) + GetDX(), x * (other.GetDY() - GetDY()) + GetDY());
 }
 
 Vector Vector::FlipX() {
@@ -135,19 +135,19 @@ Vector Vector::FlipY() {
 }
 
 void Vector::AddVector(Vector firstVector) {
-    SetXY(GetX() + firstVector.GetX(), GetY() + firstVector.GetY());
+    SetXY(GetDX() + firstVector.GetDX(), GetDY() + firstVector.GetDY());
 }
 
 void Vector::SubtractVector(Vector firstVector) {
-    SetXY(GetX() - firstVector.GetX(), GetY() - firstVector.GetY());
+    SetXY(GetDX() - firstVector.GetDX(), GetDY() - firstVector.GetDY());
 }
 
 double Vector::GetDotProduct(Vector firstVector) {
-    return GetX() * firstVector.GetX() + GetY() + firstVector.GetY();
+    return GetDX() * firstVector.GetDX() + GetDY() + firstVector.GetDY();
 }
 
 double Vector::GetCrossProduct(Vector firstVector) {
-    return GetX() * firstVector.GetY() - GetY() * firstVector.GetX();
+    return GetDX() * firstVector.GetDY() - GetDY() * firstVector.GetDX();
 }
 
 double Vector::ShortestRotationTo(Vector target) {
