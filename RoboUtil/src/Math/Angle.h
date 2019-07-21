@@ -22,9 +22,12 @@ public:
 	double getRadians();
 	double getDegrees();
 
-	Angle rotateBy(Angle other);
-	Angle inverse();
-	Angle opposite();
+	void setRadians(double radians);
+	void setDegrees(double degrees);
+
+	Angle getRotateBy(Angle other);
+	Angle getInverse();
+	Angle getOpposite();
 
 	Angle interpolate(Angle other, double x);
 };

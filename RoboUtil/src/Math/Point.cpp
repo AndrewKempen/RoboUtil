@@ -60,3 +60,8 @@ double Point::getSin() {
 double Point::getCos() {
     return m_y / hypotenuse();
 }
+
+void Point::setXY(double x, double y) {
+    setX(x);
+    setY(y);
+}

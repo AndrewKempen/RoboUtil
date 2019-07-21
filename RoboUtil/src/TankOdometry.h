@@ -1,43 +1,45 @@
 #pragma once
 
-#include <functional>
-#include <thread>
-#include <memory>
-#include <chrono>
-#include <atomic>
 #include "Math/Angle.h"
-#include "Math/Position.h"
+#include "Math/Pose.h"
 #include "Math/Point.h"
 #include "Math/Vector.h"
+#include "Math.h"
 
 using namespace std;
 
 
 class TankOdometry {
 public:
-    void Setup(function<double(void)> getLeftEncoderInches, function<double(void)> getRightEncoderInches, function<Angle(void)> getGyroAngle, double updateRate);
-    void Start();
-    void Stop();
-    void Update();
+    struct EncoderConfig {
+        double initialTicks;
+        double ticksPerWheelRevolution;
+        double wheelDiameter;
+    };
+
+    void ResetEncoderTicks(double leftEncoderTicks = 0, double rightEncoderTicks = 0);
+    void Update(double leftEncoderRawTicks, double rightEncoderRawTicks, Angle gyroAngle);
 
     static TankOdometry* GetInstance();
 
+    void Initialize(EncoderConfig leftEncoderConfig, EncoderConfig rightEncoderConfig, Pose currentPose = Pose());
+
+    void SetCurrentPose(Pose currentPose);
+
 private:
+    double m_leftTicksToDist;
+    double m_rightTicksToDist;
 
+    double m_lastLeftEncoderDist;
+    double m_lastRightEncoderDist;
 
-    Position m_robotPosition = Position(Point(), Angle());
+    Angle m_gyroInitialAngle;
 
-    function<double(void)> m_getLeftEncoderInches;
-    function<double(void)> m_getRightEncoderInches;
-    function<Angle(void)> m_getGyroAngle;
+    bool m_poseReset = true;
 
-    shared_ptr<thread> m_updateThread;
-
-    double m_updateRate;
+    Pose m_robotPose = Pose(Point(), Angle());
 
     static TankOdometry* m_instance;
-
-    atomic<bool> m_running;
 };
 
 

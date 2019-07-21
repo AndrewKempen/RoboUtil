@@ -22,6 +22,11 @@ Angle Angle::fromRadians(double radians) {
 	return Angle(cos(radians), sin(radians), false);
 }
 
+/**
+ * Return an angle based from given degrees
+ * @param degrees
+ * @return
+ */
 Angle Angle::fromDegrees(double degrees) {
 	return fromRadians(toRadians(degrees));
 }
@@ -53,16 +58,36 @@ double Angle::getDegrees() {
 	return toDegrees(getRadians());
 }
 
-Angle Angle::rotateBy(Angle other) {
+/**
+ * Rotate this angle by another angle and return the result
+ *
+ * Does not modify either angle
+ *
+ * @param other
+ * @return Addition of this angle and the other angle
+ */
+
+Angle Angle::getRotateBy(Angle other) {
 	return Angle(m_cos * other.getCos() - m_sin * other.getSin(),
 			m_cos * other.getSin() + m_sin * other.getCos(), true);
 }
 
-Angle Angle::inverse() {
+/**
+ * Get the inverse of this angle. The inverse of this angle is the angle such that X + Y = 0, where X is this angle and
+ * Y is the returned angle
+ * @return
+ */
+
+Angle Angle::getInverse() {
 	return Angle(m_cos, -m_sin, false);
 }
 
-Angle Angle::opposite() {
+/**
+ * Get the angle opposite to this angle. The opposite of this angle is the angle opposite to this angle on the unit
+ * circle
+ * @return
+ */
+Angle Angle::getOpposite() {
 	return Angle(-m_cos, -m_sin, false);
 }
 
@@ -72,6 +97,15 @@ Angle Angle::interpolate(Angle other, double x) {
 	} else if (x >= 1){
 		return other;
 	}
-	double diff = inverse().rotateBy(other).getRadians();
-	return rotateBy(fromRadians(diff * x));
+	double diff = getInverse().getRotateBy(other).getRadians();
+	return getRotateBy(fromRadians(diff * x));
+}
+
+void Angle::setDegrees(double degrees) {
+    setRadians(toRadians(degrees));
+}
+
+void Angle::setRadians(double radians) {
+    m_cos = cos(radians);
+    m_sin = sin(radians);
 }

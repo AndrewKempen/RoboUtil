@@ -22,6 +22,8 @@ public:
 
 	void setY(double y);
 
+	void setXY(double x, double y);
+
 	void transformBy(Vector vector);
 
 	void rotateBy(Angle angle);
