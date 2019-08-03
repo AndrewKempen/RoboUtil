@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module classpath="CMake" type="CPP_MODULE" version="4">
+  <component name="ExternalSystem" externalSystem="GRADLE" externalSystemModuleGroup="RoboUtil" externalSystemModuleVersion="unspecified" linkedProjectId=":RoboUtil" linkedProjectPath="$MODULE_DIR$/../../../RoboUtil" rootProjectPath="$MODULE_DIR$/../../.." />
+</module>

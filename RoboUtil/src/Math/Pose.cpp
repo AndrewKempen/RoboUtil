@@ -1,12 +1,12 @@
 #include "Math/Pose.h"
 
 
-Pose::Pose(Point point, Angle angle) {
+Pose::Pose(Vector2d point, Rotation2Dd angle) {
     point = point;
     angle = angle;
 }
 
 Pose::Pose() {
-    point = Point();
-    angle = Angle();
+    position = Vector2d();
+    angle = Rotation2Dd();
 }

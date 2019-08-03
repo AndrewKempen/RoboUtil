@@ -45,7 +45,7 @@ void TankOdometry::Update(double leftEncoderRawTicks, double rightEncoderRawTick
 
     Vector robotTranslation = Vector::FromXY(distanceMoved * gyroAngle.getCos(),
                                              distanceMoved * gyroAngle.getSin());
-    m_robotPose.point.transformBy(robotTranslation);
+    m_robotPose.position.transformBy(robotTranslation);
     m_robotPose.angle = gyroAngle.getRotateBy(m_gyroInitialAngle.getInverse());
 
     m_lastLeftEncoderDist = leftDist;

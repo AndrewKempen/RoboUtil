@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="CPP_MODULE" version="4">
+  <component name="ExternalSystem" externalSystem="GRADLE" externalSystemModuleGroup="RoboUtil" externalSystemModuleVersion="unspecified" linkedProjectId=":3rdparty" linkedProjectPath="$MODULE_DIR$/../../../3rdparty" rootProjectPath="$MODULE_DIR$/../../.." />
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$/../../../3rdparty">
+      <excludeFolder url="file://$MODULE_DIR$/../../../3rdparty/.gradle" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../3rdparty/build" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../3rdparty/out" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

@@ -2,9 +2,9 @@
 
 #include "Math/Angle.h"
 #include "Math/Pose.h"
-#include "Math/Point.h"
+#include "Math/Point_OLD.h"
 #include "Math/Vector.h"
-#include "Math.h"
+#include "Math/Math.h"
 
 using namespace std;
 
@@ -37,7 +37,7 @@ private:
 
     bool m_poseReset = true;
 
-    Pose m_robotPose = Pose(Point(), Angle());
+    Pose m_robotPose = Pose(Point_OLD(), Angle());
 
     static TankOdometry* m_instance;
 };

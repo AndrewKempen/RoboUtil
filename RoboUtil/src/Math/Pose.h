@@ -1,11 +1,14 @@
 #pragma once
 
-#include "Point.h"
+#include <Eigen/Dense>
+#include "Math/Angle.h"
+
+using namespace Eigen;
 
 struct Pose {
-    Point point;
-    Angle angle;
+    Vector2d position;
+    Rotation2Dd angle;
 
     Pose();
-	Pose(Point point, Angle angle);
+	Pose(Vector2d point, Rotation2Dd angle);
 };

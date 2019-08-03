@@ -10,7 +10,7 @@ ext.json_root = new File(libroot, "json")
 ext.googletest_version = "1.8.1"
 
 model {
-    buildTypes {
+    buildTypes {l
         release
         debug
     }
@@ -31,12 +31,23 @@ model {
         json(NativeLibrarySpec) {
             sources.cpp {
                 source {
-                    srcDir ext.json_root
+                    srcDir "json"
                     include "**/*.hpp"
                 }
                 exportedHeaders {
-                    srcDirs ext.json_root
+                    srcDirs "json"
                     include "**/*.hpp"
+                }
+            }
+        }
+        eigen(NativeLibrarySpec) {
+            sources.cpp {
+                source {
+                    srcDir "Eigen/Eigen"
+                    include "**/*.cpp"
+                }
+                exportedHeaders {
+                    srcDirs "Eigen"
                 }
             }
         }

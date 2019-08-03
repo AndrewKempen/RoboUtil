@@ -19,15 +19,13 @@ TEST(VectorTest, Initialization) {
     EXPECT_NEAR(vector1.GetDY(), 1, 0.001);
 }
 
-TEST(VectorTest, Math) {
-    Vector vector1 = Vector::FromXY(1, 2);
-    Vector vector2 = Vector::FromXY(1, 0);
-
-    vector1.AddVector(vector2);
-    EXPECT_DOUBLE_EQ(vector1.GetDX(), 2);
-    EXPECT_DOUBLE_EQ(vector1.GetDY(), 2);
-
-    vector1.SubtractVector(vector2);
-    EXPECT_DOUBLE_EQ(vector1.GetDX(), 1);
-    EXPECT_DOUBLE_EQ(vector1.GetDY(), 2);
-}
+//TEST(VectorTest, Math) {
+//    Vector vector1 = Vector::FromXY(1, 2);
+//    Vector vector2 = Vector::FromXY(1, 0);
+//
+//    EXPECT_DOUBLE_EQ(vector1.GetDX(), 2);
+//    EXPECT_DOUBLE_EQ(vector1.GetDY(), 2);
+//
+//    EXPECT_DOUBLE_EQ(vector1.GetDX(), 1);
+//    EXPECT_DOUBLE_EQ(vector1.GetDY(), 2);
+//}

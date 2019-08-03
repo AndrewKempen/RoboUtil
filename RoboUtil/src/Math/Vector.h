@@ -2,10 +2,13 @@
 
 #include "Math.h"
 
+class Point_OLD;
+
 class Vector {
 public:
 	Vector();
 	Vector(double r, double theta);
+	Vector(Point_OLD start, Point_OLD end);
 	Vector(const Vector& other);
     double GetCompassDegrees();
   	double GetDX();
@@ -30,15 +33,17 @@ public:
 	void SetXY(double x, double y);
 	void SetMagnitude(double magnitude);
     void Invert();
-  	void AddVector(Vector firstVector);
-	void SubtractVector(Vector firstVector);
-  	double GetCrossProduct(Vector firstVector);
-  	double GetDotProduct(Vector firstVector);
+  	double Cross(Vector firstVector);
+  	double Dot(Vector firstVector);
   	double GetMagnitude();
   	double GetDegrees();
   	double GetRadians();
   	double GetCos();
   	double GetSin();
+  	Vector Project(Vector vectorToProject);
+    Vector operator+(Vector other);
+    Vector operator-(Vector other);
+    Vector operator*(double scalar);
 
 protected:
   	double m_theta = 0;

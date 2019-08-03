@@ -1,4 +1,6 @@
 #include "Math/Vector.h"
+#include "Point_OLD.h"
+
 
 Vector::Vector() {
     m_theta = 0;
@@ -134,19 +136,12 @@ Vector Vector::FlipY() {
     return Vector(0, 0);
 }
 
-void Vector::AddVector(Vector firstVector) {
-    SetXY(GetDX() + firstVector.GetDX(), GetDY() + firstVector.GetDY());
-}
 
-void Vector::SubtractVector(Vector firstVector) {
-    SetXY(GetDX() - firstVector.GetDX(), GetDY() - firstVector.GetDY());
-}
-
-double Vector::GetDotProduct(Vector firstVector) {
+double Vector::Dot(Vector firstVector) {
     return GetDX() * firstVector.GetDX() + GetDY() + firstVector.GetDY();
 }
 
-double Vector::GetCrossProduct(Vector firstVector) {
+double Vector::Cross(Vector firstVector) {
     return GetDX() * firstVector.GetDY() - GetDY() * firstVector.GetDX();
 }
 
@@ -166,4 +161,24 @@ double Vector::GetCos() {
 }
 double Vector::GetSin() {
     return sin(m_theta);
+}
+
+Vector::Vector(Point_OLD start, Point_OLD end) {
+    SetXY(end.getX() - start.getX(), end.getY() - start.getY());
+}
+
+Vector Vector::Project(Vector vectorToProject) {
+    return Vector();
+}
+
+Vector Vector::operator+(Vector other) {
+    return FromXY(GetDX() + other.GetDX(), GetDY() + other.GetDY());
+}
+
+Vector Vector::operator-(Vector other) {
+    return FromXY(GetDX() - other.GetDX(), GetDY() - other.GetDY());
+}
+
+Vector Vector::operator*(double scalar) {
+    return Vector(GetMagnitude() * scalar, GetRadians());
 }

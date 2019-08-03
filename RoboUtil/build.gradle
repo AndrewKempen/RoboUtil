@@ -20,6 +20,7 @@ model {
             if (!(toolChain instanceof Clang) && targetPlatform.name == edu.wpi.first.toolchain.NativePlatforms.desktop)
                 println "WARNING: Not using Clang. Additional warnings and sanitation may be missing."
             lib project: ":3rdparty", library: "json", linkage: "static"
+            lib project: ":3rdparty", library: "eigen", linkage: "static"
         }
     }
     components {
