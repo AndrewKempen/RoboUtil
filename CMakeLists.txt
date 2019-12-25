@@ -10,11 +10,12 @@ set(CMAKE_CXX_FLAGS "-g -Wall")
 
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
-include_directories(RoboUtil/src)
+include_directories(src)
+include_directories(include)
 include_directories(3rdparty/json)
 
 
-file(GLOB_RECURSE SRC_FILES "RoboUtil/src/*.cpp")
+file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 add_library(RoboUtil ${SRC_FILES})
 
 add_subdirectory(3rdparty/Eigen)
@@ -37,7 +38,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 ##############
 # Unit Tests
 ##############
-file(GLOB TEST_FILES RoboUtil/test/*.cpp)
+file(GLOB TEST_FILES test/*.cpp)
 add_executable(RoboUtil_test ${TEST_FILES})
 
 # Standard linking to gtest stuff.

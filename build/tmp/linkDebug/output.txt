@@ -1,4 +1,0 @@
-See file:///mnt/Programming/git/RoboUtil/build/tmp/linkDebug/output.txt for all output for linkDebug.
-linking libRoboUtil.so successful.
-
-Finished linkDebug, see full log file:///mnt/Programming/git/RoboUtil/build/tmp/linkDebug/output.txt.
