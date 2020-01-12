@@ -13,6 +13,8 @@ public:
     double getSpeed();
     string getStateCommand();
 
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
     Vector2d m_point;
     double m_speed;

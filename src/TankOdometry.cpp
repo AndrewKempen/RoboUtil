@@ -19,6 +19,41 @@ void TankOdometry::Initialize(EncoderConfig leftEncoderConfig, EncoderConfig rig
 }
 
 /**
+ * This function is used to update the internal calculated position of the robot. Not as accurate as gyro version
+ *
+ * To maximize accuracy in robot position estimation, this function should be called as frequently as possible, ideally
+ * at a rate of 50 Hz or greater.
+ *
+ * @param leftEncoderRawTicks The distance in inches measured by the left encoder since when the tracker was last initialized
+ * @param rightEncoderRawTicks The distance in inches measured by the left encoder since when the tracker was last initialized
+ */
+void TankOdometry::Update(double leftEncoderRawTicks, double rightEncoderRawTicks, double trackWidth) {
+    double leftDist = leftEncoderRawTicks * m_leftTicksToDist;
+    double rightDist = rightEncoderRawTicks * m_rightTicksToDist;
+
+    if(m_poseReset) {
+        m_lastLeftEncoderDist = leftDist;
+        m_lastRightEncoderDist = rightDist;
+        m_poseReset = false;
+    }
+
+    double leftDelta = leftDist - m_lastLeftEncoderDist;
+    double rightDelta = rightDist - m_lastRightEncoderDist;
+    double distanceMoved = (leftDelta + rightDelta) / 2.0;
+
+    double rotation = (rightDelta - leftDelta) / trackWidth;
+
+    Vector2d robotTranslation(0, distanceMoved);
+
+    m_robotPose.angle = m_robotPose.angle * Rotation2Dd(rotation);
+    robotTranslation = m_robotPose.angle * robotTranslation;
+    m_robotPose.position += robotTranslation;
+
+    m_lastLeftEncoderDist = leftDist;
+    m_lastRightEncoderDist = rightDist;
+}
+
+/**
  * This function is used to update the internal calculated position of the robot
  *
  * To maximize accuracy in robot position estimation, this function should be called as frequently as possible, ideally
@@ -43,7 +78,7 @@ void TankOdometry::Update(double leftEncoderRawTicks, double rightEncoderRawTick
     double rightDelta = rightDist - m_lastRightEncoderDist;
     double distanceMoved = (leftDelta + rightDelta) / 2.0;
 
-    Vector2d robotTranslation(distanceMoved, 0);
+    Vector2d robotTranslation(0, distanceMoved);
     robotTranslation = gyroAngle * robotTranslation;
     m_robotPose.position += robotTranslation;
     m_robotPose.angle = gyroAngle * m_gyroInitialAngle.inverse();

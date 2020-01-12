@@ -1,4 +1,5 @@
 #include "Path.h"
+#include "../include/Path.h"
 
 Path::Path(string name, vector<Waypoint> waypoints) {
     m_name = name;
@@ -6,7 +7,7 @@ Path::Path(string name, vector<Waypoint> waypoints) {
 
     m_length = 0;
 
-    for(int i = 0; i < m_waypoints.size() - 1; i++) {
+    for(unsigned int i = 0; i < m_waypoints.size() - 1; i++) {
         PathSegment segment = PathSegment(m_waypoints[i], m_waypoints[i + 1]);
         m_pathSegments.push_back(segment);
         m_length += segment.getLength();
@@ -33,7 +34,7 @@ void Path::addWaypoint(Waypoint waypoint) {
     m_waypoints.push_back(waypoint);
 }
 
-double Path::update(Vector2d robotPosition) {
+PathSegment::closestPointReport Path::update(Vector2d robotPosition) {
     PathSegment::closestPointReport report;
     bool closestSegmentFound = false;
 
@@ -68,8 +69,7 @@ double Path::update(Vector2d robotPosition) {
     }
 
     m_distanceDownPath += report.distanceToStart;
-
-    return report.distanceAway;
+    return report;
 }
 
 Vector2d Path::findCircularIntersection(Vector2d center, double radius) {
@@ -84,8 +84,8 @@ Vector2d Path::findCircularIntersection(Vector2d center, double radius) {
         return m_pathSegments[0].getStart();
     }
 
-    for (int i = m_currentSegment; i < m_pathSegments.size(); i++) {
-        PathSegment segment = m_pathSegments[m_currentSegment];
+    for (unsigned int i = m_currentSegment; i < m_pathSegments.size(); i++) {
+        PathSegment segment = m_pathSegments[i];
         Vector2d centerToSegmentEnd = center - segment.getEnd();
         if (centerToSegmentEnd.norm() > radius) {
             //Gotcha! Somewhere on this segment must be the circular intersection point
@@ -114,4 +114,12 @@ Vector2d Path::findCircularIntersection(Vector2d center, double radius) {
 
 double Path::GetDistanceRemaining() {
     return m_length - m_distanceDownPath;
+}
+
+vector<Waypoint> Path::getWaypoints() {
+    return m_waypoints;
+}
+
+vector<PathSegment> Path::getPathSegments() {
+    return m_pathSegments;
 }

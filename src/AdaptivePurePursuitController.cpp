@@ -1,15 +1,17 @@
 #include "AdaptivePurePursuitController.h"
 
-AdaptivePurePursuitController::AdaptivePurePursuitController(Path path, double lookaheadDistance, double maxAccel, double trackWidth,
-                                                             double pathCompletionTolerance) : m_path(path) {
+AdaptivePurePursuitController::AdaptivePurePursuitController(Path path, double lookaheadDistance, double trackWidth,
+                                                             double pathCompletionTolerance, double maxAccel) : m_path(path) {
     m_lookaheadDistance = lookaheadDistance;
-    m_maxAccel = maxAccel;
     m_trackWidth = trackWidth;
     m_completionTolerance = pathCompletionTolerance;
+    m_maxAccel = maxAccel;
 }
 
-AdaptivePurePursuitController::DriveCommand AdaptivePurePursuitController::Update(Pose robotPose) {
-    double distanceFromPath = m_path.update(robotPose.position);
+DriveCommand AdaptivePurePursuitController::Update(Pose robotPose, double currentTime) {
+    auto report = m_path.update(robotPose.position);
+
+    double distanceFromPath = report.distanceAway;
 
     if(m_path.GetDistanceRemaining() < m_completionTolerance) {
         DriveCommand command;
@@ -18,29 +20,46 @@ AdaptivePurePursuitController::DriveCommand AdaptivePurePursuitController::Updat
         return command;
     }
 
+    cout << "robotPose: " << robotPose.position << endl;
+
     double lookaheadDistance = distanceFromPath + m_lookaheadDistance;
 
     Vector2d lookaheadPoint = m_path.findCircularIntersection(robotPose.position, lookaheadDistance);
+    cout << "lookaheadPoint: " << lookaheadPoint << endl;
 
     Vector2d robotToLookahead = lookaheadPoint - robotPose.position;
+    cout << "robotToLookahead: " << robotToLookahead << endl;
 
-    Vector2d robotPoseUnitVector = robotPose.angle * Vector2d::UnitX();
+    Vector2d robotPoseUnitVector = robotPose.angle * Vector2d::UnitY();
+    cout << "robotPoseUnitVector: " << robotPoseUnitVector << endl;
 
     Vector2d robotToPerpIntersection = robotPoseUnitVector.dot(robotToLookahead) * robotPoseUnitVector;
+    cout << "robotToPerpIntersection: " << robotToPerpIntersection << endl;
 
     Vector2d perpIntersectionToLookahead = robotToLookahead - robotToPerpIntersection;
+    cout << "perpIntersectionToLookahead: " << perpIntersectionToLookahead << endl;
 
     double curvature = 2 * perpIntersectionToLookahead.norm() / (lookaheadDistance * lookaheadDistance);
 
-    curvature *= robotToLookahead.x() * sin(robotPose.angle.angle())
-            - robotToLookahead.y() * cos(robotPose.angle.angle()) > 0 ? 1 : -1;
+    cout << "Angle : " << robotPose.angle.angle() << endl;
 
-    double velocity = 1;
+//    curvature *= (robotToLookahead.x() * sin(robotPose.angle.angle())
+//            - robotToLookahead.y() * cos(robotPose.angle.angle())) > 0 ? 1 : -1;
+
+    double velocity = report.speed;
+
+    if(m_lastTime == -1) {
+        m_lastTime = currentTime;
+        m_lastVelocity = 0;
+    } else {
+        double maxDelta = (currentTime - m_lastTime) * m_maxAccel;
+        velocity = m_lastVelocity + clamp(velocity - m_lastVelocity, -maxDelta, maxDelta);
+    }
 
     DriveCommand command;
 
-    command.leftVelocity = velocity * (2 + curvature * m_trackWidth) / 2;
-    command.rightVelocity = velocity * (2 + curvature * m_trackWidth) / 2;
+    command.leftVelocity = velocity * (2 + curvature * m_trackWidth) / 2.0;
+    command.rightVelocity = velocity * (2 - curvature * m_trackWidth) / 2.0;
 
     return command;
 }

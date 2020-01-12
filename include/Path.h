@@ -19,15 +19,17 @@ private:
     double m_length;
     double m_distanceDownPath;
     double m_currentSegmentStart, m_currentSegmentEnd;
-    int m_currentSegment;
+    unsigned int m_currentSegment;
 public:
     Path(string name, vector<Waypoint> waypoints);
-    double update(Vector2d robotPosition);
+    PathSegment::closestPointReport update(Vector2d robotPosition);
     Vector2d findCircularIntersection(Vector2d center, double radius);
     double GetDistanceRemaining();
     void flipOverXAxis();
     void flipOverYAxis();
     void addWaypoint(Waypoint waypoint);
+    vector<Waypoint> getWaypoints();
+    vector<PathSegment> getPathSegments();
 };
 
 

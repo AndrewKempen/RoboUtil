@@ -36,15 +36,21 @@ PathSegment::closestPointReport PathSegment::getClosestPoint(Vector2d otherPoint
     double length = minimumToEnd.norm();
 
     closestPointReport report;
-
     if(length > 0) {
         Vector2d startToOther = otherPoint - m_start;
         double distFromMinimum = minimumToEnd.dot(startToOther) / length; //Find component of minimumToEnd vector onto
-                                                                          //this path segment
+        //this path segment
         Vector2d minimumToClosest = minimumToEnd * (distFromMinimum / length);
-        report.distanceToStart = minimumDistanceFromStart - distFromMinimum;
+
+        report.distanceToStart = distFromMinimum - minimumDistanceFromStart;
         report.distanceToEnd = m_length - report.distanceToStart;
-        report.closestPoint = m_start + startToMinimum + minimumToClosest; //Closest point on path segment
+        if (report.distanceToStart < 0) {
+            report.distanceToStart = 0;
+            report.closestPoint = m_start;
+            report.distanceToEnd = m_length;
+        } else {
+            report.closestPoint = m_start + minimumToClosest; //Closest point on path segment
+        }
     } else {
         report.distanceToEnd = length;
         report.closestPoint = minimum;
@@ -67,6 +73,11 @@ Vector2d PathSegment::getCircularIntersectionPoint(Vector2d center, double radiu
     double b = 2 * centerToStart.dot(m_startToEnd);
     double c = centerToStart.dot(centerToStart) - (radius * radius);
     double discriminant = (b * b) - (4 * a * c);
+
+//    Logger::logInfo("Discriminant: " + to_string(discriminant));
+//    Logger::logInfo("A: " + to_string(a));
+//    Logger::logInfo("B: " + to_string(b));
+//    Logger::logInfo("C: " + to_string(c));
 
     if (discriminant < 0) {
         return center; //No intersection

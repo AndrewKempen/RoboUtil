@@ -3,7 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/3rdparty/Eigen" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/3rdparty/eigen-git-mirror" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/3rdparty/googletest" vcs="Git" />
   </component>
 </project>

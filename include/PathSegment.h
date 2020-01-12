@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Waypoint.h"
+#include "Logger.h"
 #include <Eigen/Dense>
 
 using namespace Eigen;
@@ -33,6 +34,8 @@ public:
     closestPointReport getClosestPoint(Vector2d otherPoint, double minimumDistanceFromStart);
     Vector2d getCircularIntersectionPoint(Vector2d center, double radius);
     void extend(double lengthToExtendBy);
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 

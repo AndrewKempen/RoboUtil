@@ -1,8 +1,9 @@
 #include "gtest/gtest.h"
-#include "PathLoader.h"
+#include "PathManager.h"
+
 
 TEST(PathTest, CanLoadFromText) {
-    auto paths = PathLoader::loadPaths("{\n"
+    auto sucess = PathManager::GetInstance()->LoadPathsText("{\n"
                           "    \"sharedWaypoints\": [],\n"
                           "    \"paths\": [\n"
                           "        {\n"
@@ -266,4 +267,26 @@ TEST(PathTest, CanLoadFromText) {
                           "        }\n"
                           "    ]\n"
                           "}");
+    EXPECT_TRUE(sucess);
+
+    auto paths = PathManager::GetInstance()->GetPaths();
+
+    auto waypoints = paths[0].getWaypoints();
+
+    EXPECT_EQ(waypoints[0].getPoint().x(), 0);
+    EXPECT_EQ(waypoints[0].getPoint().y(), 7.5);
+    EXPECT_EQ(waypoints[1].getPoint().y(), 11.47);
+}
+
+TEST(PathTest, CanLoadFromFile) {
+    auto sucess = PathManager::GetInstance()->LoadPathsFile("test/testPaths/simplePath.json");
+    EXPECT_TRUE(sucess);
+
+    auto paths = PathManager::GetInstance()->GetPaths();
+
+    auto waypoints = paths[0].getWaypoints();
+
+    EXPECT_EQ(waypoints[0].getPoint().x(), 0);
+    EXPECT_EQ(waypoints[0].getPoint().y(), 7.5);
+    EXPECT_EQ(waypoints[1].getPoint().y(), 11.47);
 }

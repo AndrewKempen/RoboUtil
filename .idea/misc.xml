@@ -5,6 +5,9 @@
     <sourceRoots>
       <file path="$PROJECT_DIR$/RoboUtil/src" />
       <file path="$PROJECT_DIR$/RoboUtil/test" />
+      <file path="$PROJECT_DIR$/include" />
+      <file path="$PROJECT_DIR$/src" />
+      <file path="$PROJECT_DIR$/test" />
     </sourceRoots>
   </component>
 </project>
