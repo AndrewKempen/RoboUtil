@@ -3,13 +3,14 @@
 #include "Math/Pose.h"
 #include "TankOdometry.h"
 #include "AdaptivePurePursuitController.h"
+#include <stdio.h>
 
 TEST(AdaptivePurePursuit, FollowsStraightPath) {
     PathManager::GetInstance()->LoadPathsFile("test/testPaths/simplePath.json");
 
     auto paths = PathManager::GetInstance()->GetPaths();
 
-    AdaptivePurePursuitController controller(paths[0], 4, 10.3, 0.01, 0.5);
+    AdaptivePurePursuitController controller(paths[0], 4, 10.3, 0.01, 100);
 
     TankOdometry::EncoderConfig encoderConfig;
 
@@ -18,21 +19,33 @@ TEST(AdaptivePurePursuit, FollowsStraightPath) {
     encoderConfig.wheelDiameter = (1 / PI);
 
     TankOdometry::GetInstance()->Initialize(encoderConfig, encoderConfig,
-            Pose(paths[0].getWaypoints()[0].getPoint(), Rotation2Dd(0)));
+                                            Pose(paths[0].getWaypoints()[0].getPoint(), Rotation2Dd(0)));
 
     double leftPosition = 0;
     double rightPosition = 0;
 
     const double dt = 0.1;
 
-    for(double t = dt; t < 25; t += dt) {
+    FILE *myfile;
+
+    myfile = fopen("log.csv", "w");
+
+    fprintf(myfile, "time,leftVelocity,rightVelocity,leftPosition,rightPosition,x,y,\n");
+
+    for (double t = dt; t < 25; t += dt) {
         auto command = controller.Update(TankOdometry::GetInstance()->GetPose(), t);
 
         leftPosition += (command.leftVelocity * dt);
         rightPosition += (command.rightVelocity * dt);
 
         TankOdometry::GetInstance()->Update(leftPosition, rightPosition, 10);
+
+        fprintf(myfile, "%.1f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,\n", t, command.leftVelocity, command.rightVelocity,
+                leftPosition, rightPosition, TankOdometry::GetInstance()->GetPose().position.x(),
+                TankOdometry::GetInstance()->GetPose().position.y());
     }
+
+    fclose(myfile);
 
     Pose pose = TankOdometry::GetInstance()->GetPose();
 
@@ -40,7 +53,7 @@ TEST(AdaptivePurePursuit, FollowsStraightPath) {
     EXPECT_NEAR(pose.position.x(), 0.0, 0.02);
 }
 
-TEST(DISABLED_AdaptivePurePursuit, FollowsSplinePath) {
+TEST(AdaptivePurePursuit, FollowsSplinePath) {
     PathManager::GetInstance()->LoadPathsFile("test/testPaths/simplePath.json");
 
     auto paths = PathManager::GetInstance()->GetPaths();
@@ -61,14 +74,26 @@ TEST(DISABLED_AdaptivePurePursuit, FollowsSplinePath) {
 
     const double dt = 0.1;
 
-    for(double t = dt; t < 100; t += dt) {
+    FILE *myfile;
+
+    myfile = fopen("log2.csv", "w");
+
+    fprintf(myfile, "time,leftVelocity,rightVelocity,leftPosition,rightPosition,x,y,\n");
+
+    for (double t = dt; t < 25; t += dt) {
         auto command = controller.Update(TankOdometry::GetInstance()->GetPose(), t);
 
         leftPosition += (command.leftVelocity * dt);
         rightPosition += (command.rightVelocity * dt);
 
-        TankOdometry::GetInstance()->Update(leftPosition, rightPosition, 10.3);
+        TankOdometry::GetInstance()->Update(leftPosition, rightPosition, 10);
+
+        fprintf(myfile, "%.1f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,\n", t, command.leftVelocity, command.rightVelocity,
+                leftPosition, rightPosition, TankOdometry::GetInstance()->GetPose().position.x(),
+                TankOdometry::GetInstance()->GetPose().position.y());
     }
+
+    fclose(myfile);
 
     Pose pose = TankOdometry::GetInstance()->GetPose();
 

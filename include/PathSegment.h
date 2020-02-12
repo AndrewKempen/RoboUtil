@@ -17,7 +17,6 @@ private:
     double m_length, m_lengthSquared;
     string m_stateCommand;
 
-    double getSpeed(double distanceFromStart);
 
 public:
     struct closestPointReport {
@@ -31,6 +30,7 @@ public:
     Vector2d getStart();
     Vector2d getEnd();
     double getLength();
+    double getSpeed(double distanceFromStart);
     closestPointReport getClosestPoint(Vector2d otherPoint, double minimumDistanceFromStart);
     Vector2d getCircularIntersectionPoint(Vector2d center, double radius);
     void extend(double lengthToExtendBy);

@@ -30,6 +30,9 @@ double PathSegment::getLength() {
 }
 
 PathSegment::closestPointReport PathSegment::getClosestPoint(Vector2d otherPoint, double minimumDistanceFromStart) {
+    if(minimumDistanceFromStart > m_length) {
+        cout << "Error minimum dist" << endl;
+    }
     Vector2d startToMinimum = m_startToEndUnit * minimumDistanceFromStart;
     Vector2d minimum = m_start + startToMinimum;
     Vector2d minimumToEnd = m_end - minimum;
@@ -37,27 +40,31 @@ PathSegment::closestPointReport PathSegment::getClosestPoint(Vector2d otherPoint
 
     closestPointReport report;
     if(length > 0) {
-        Vector2d startToOther = otherPoint - m_start;
-        double distFromMinimum = minimumToEnd.dot(startToOther) / length; //Find component of minimumToEnd vector onto
-        //this path segment
-        Vector2d minimumToClosest = minimumToEnd * (distFromMinimum / length);
+        Vector2d minimumToOther = otherPoint - minimum;
 
-        report.distanceToStart = distFromMinimum - minimumDistanceFromStart;
-        report.distanceToEnd = m_length - report.distanceToStart;
-        if (report.distanceToStart < 0) {
+        double dotProduct = minimumToEnd.dot(minimumToOther);
+        if (dotProduct <= 0) { //Closest point is behind minimum
             report.distanceToStart = 0;
-            report.closestPoint = m_start;
-            report.distanceToEnd = m_length;
+            report.closestPoint = minimum;
+            report.distanceToEnd = length;
         } else {
-            report.closestPoint = m_start + minimumToClosest; //Closest point on path segment
+            Vector2d minimumToClosest = dotProduct / (minimumToEnd.squaredNorm()) * minimumToEnd;
+
+            double distFromMinimum = minimumToClosest.norm();
+
+            report.distanceToStart = distFromMinimum;
+            report.distanceToEnd = length - report.distanceToStart;
+
+            report.closestPoint = minimum + minimumToClosest; //Closest point on path segment
         }
     } else {
         report.distanceToEnd = length;
         report.closestPoint = minimum;
+        cout << "Error, length < 0" << endl;
     }
     Vector2d closestToOther = otherPoint - report.closestPoint;
     report.distanceAway = closestToOther.norm();
-    report.speed = getSpeed(m_length - report.distanceToEnd);
+    report.speed = getSpeed(report.distanceToStart + minimumDistanceFromStart);
     return report;
 }
 

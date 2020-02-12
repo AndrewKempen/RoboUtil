@@ -6,6 +6,7 @@ Path::Path(string name, vector<Waypoint> waypoints) {
     m_waypoints = waypoints;
 
     m_length = 0;
+    m_distanceDownPath = 0;
 
     for(unsigned int i = 0; i < m_waypoints.size() - 1; i++) {
         PathSegment segment = PathSegment(m_waypoints[i], m_waypoints[i + 1]);
@@ -32,9 +33,13 @@ void Path::flipOverYAxis() {
 
 void Path::addWaypoint(Waypoint waypoint) {
     m_waypoints.push_back(waypoint);
+
+    PathSegment segment = PathSegment(m_waypoints[m_waypoints.size() - 2], m_waypoints[m_waypoints.size() - 1]);
+    m_pathSegments.push_back(segment);
+    m_length += segment.getLength();
 }
 
-PathSegment::closestPointReport Path::update(Vector2d robotPosition) {
+Path::PathReport Path::update(Vector2d robotPosition) {
     PathSegment::closestPointReport report;
     bool closestSegmentFound = false;
 
@@ -54,7 +59,7 @@ PathSegment::closestPointReport Path::update(Vector2d robotPosition) {
                 PathSegment::closestPointReport nextReport;
                 nextReport = m_pathSegments[m_currentSegment + 1].getClosestPoint(robotPosition, 0);
                 if (nextReport.distanceAway < report.distanceAway
-                    && nextReport.distanceToStart > 0
+                    && nextReport.distanceToStart >= 0
                     && nextReport.distanceToEnd > 0) {
                     m_currentSegmentStart += m_pathSegments[m_currentSegment].getLength();
                     m_currentSegment++;
@@ -69,7 +74,13 @@ PathSegment::closestPointReport Path::update(Vector2d robotPosition) {
     }
 
     m_distanceDownPath += report.distanceToStart;
-    return report;
+
+    PathReport pathReport;
+    pathReport.speed = report.speed;
+    pathReport.closestPoint = report.closestPoint;
+    pathReport.distanceAway = report.distanceAway;
+
+    return pathReport;
 }
 
 Vector2d Path::findCircularIntersection(Vector2d center, double radius) {

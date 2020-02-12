@@ -290,3 +290,45 @@ TEST(PathTest, CanLoadFromFile) {
     EXPECT_EQ(waypoints[0].getPoint().y(), 7.5);
     EXPECT_EQ(waypoints[1].getPoint().y(), 11.47);
 }
+
+TEST(PathTest, SpeedIsSmooth) {
+    Waypoint point1(Vector2d(0, 0), 0);
+    Waypoint point2(Vector2d(0, 10), 10);
+    Waypoint point3(Vector2d(0, 20), 0);
+
+    vector<Waypoint> waypoints;
+    waypoints.push_back(point1);
+    waypoints.push_back(point2);
+    waypoints.push_back(point3);
+
+    Path path("test", waypoints);
+
+    auto report = path.update(Vector2d(0,0));
+
+    EXPECT_EQ(report.speed, 0);
+    EXPECT_EQ(report.distanceAway, 0);
+    EXPECT_EQ(report.closestPoint.x(), 0);
+    EXPECT_EQ(report.closestPoint.y(), 0);
+
+    report = path.update(Vector2d(0, 5));
+
+    EXPECT_EQ(report.speed, 5);
+    EXPECT_EQ(report.distanceAway, 0);
+    EXPECT_EQ(report.closestPoint.x(), 0);
+    EXPECT_EQ(report.closestPoint.y(), 5);
+
+    report = path.update(Vector2d(0, 10));
+
+    EXPECT_EQ(report.speed, 10);
+    EXPECT_EQ(report.distanceAway, 0);
+    EXPECT_EQ(report.closestPoint.x(), 0);
+    EXPECT_EQ(report.closestPoint.y(), 10);
+
+    report = path.update(Vector2d(0, 15));
+
+    EXPECT_EQ(report.speed, 5);
+    EXPECT_EQ(report.distanceAway, 0);
+    EXPECT_EQ(report.closestPoint.x(), 0);
+    EXPECT_EQ(report.closestPoint.y(), 15);
+
+}

@@ -21,8 +21,14 @@ private:
     double m_currentSegmentStart, m_currentSegmentEnd;
     unsigned int m_currentSegment;
 public:
+    struct PathReport {
+        Vector2d closestPoint;
+        double distanceAway;
+        double speed;
+    };
+
     Path(string name, vector<Waypoint> waypoints);
-    PathSegment::closestPointReport update(Vector2d robotPosition);
+    Path::PathReport update(Vector2d robotPosition);
     Vector2d findCircularIntersection(Vector2d center, double radius);
     double GetDistanceRemaining();
     void flipOverXAxis();

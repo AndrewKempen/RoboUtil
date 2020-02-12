@@ -31,7 +31,6 @@ DriveCommand AdaptivePurePursuitController::Update(Pose robotPose, double curren
     cout << "robotToLookahead: " << robotToLookahead << endl;
 
     Vector2d robotPoseUnitVector = robotPose.angle * Vector2d::UnitY();
-    cout << "robotPoseUnitVector: " << robotPoseUnitVector << endl;
 
     Vector2d robotToPerpIntersection = robotPoseUnitVector.dot(robotToLookahead) * robotPoseUnitVector;
     cout << "robotToPerpIntersection: " << robotToPerpIntersection << endl;
@@ -43,18 +42,40 @@ DriveCommand AdaptivePurePursuitController::Update(Pose robotPose, double curren
 
     cout << "Angle : " << robotPose.angle.angle() << endl;
 
-//    curvature *= (robotToLookahead.x() * sin(robotPose.angle.angle())
-//            - robotToLookahead.y() * cos(robotPose.angle.angle())) > 0 ? 1 : -1;
+    double x = robotToLookahead.x();
+    double y = robotToLookahead.y();
+    double angle = robotPose.angle.angle();
 
     double velocity = report.speed;
 
-    if(m_lastTime == -1) {
-        m_lastTime = currentTime;
-        m_lastVelocity = 0;
-    } else {
-        double maxDelta = (currentTime - m_lastTime) * m_maxAccel;
-        velocity = m_lastVelocity + clamp(velocity - m_lastVelocity, -maxDelta, maxDelta);
-    }
+    cout << velocity;
+
+    cout << "," << curvature << ",";
+
+    curvature *= (robotToLookahead.x() * cos(robotPose.angle.angle())
+            - robotToLookahead.y() * sin(robotPose.angle.angle())) > 0 ? 1 : -1;
+
+    cout << curvature << ",";
+
+    cout << x << "," << y << "," << angle << ",";
+
+//    if(m_lastTime == -1) {
+//        m_lastTime = currentTime;
+//        m_lastVelocity = 0;
+//        velocity = 0;
+//    } else {
+//        double deltaTime = currentTime - m_lastTime;
+//        double acceleration = (velocity - m_lastVelocity) / deltaTime;
+//        if(acceleration >= 0 && acceleration > m_maxAccel) { //Accelerating
+//            velocity = m_lastVelocity + m_maxAccel * deltaTime;
+//        } else if (-acceleration > m_maxAccel) { //Decelerating
+//            velocity = m_lastVelocity + -m_maxAccel * deltaTime;
+//        }
+//
+//        m_lastVelocity = velocity;
+//        m_lastTime = currentTime;
+//    }
+    cout << velocity << ",\n";
 
     DriveCommand command;
 
