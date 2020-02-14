@@ -2,7 +2,7 @@
 #include "PathManager.h"
 #include "Math/Pose.h"
 #include "TankOdometry.h"
-#include "AdaptivePurePursuitController.h"
+#include "AdaptivePursuit.h"
 #include <stdio.h>
 
 TEST(AdaptivePurePursuit, FollowsStraightPath) {
@@ -10,7 +10,8 @@ TEST(AdaptivePurePursuit, FollowsStraightPath) {
 
     auto paths = PathManager::GetInstance()->GetPaths();
 
-    AdaptivePurePursuitController controller(paths[0], 4, 10.3, 0.01, 100);
+    AdaptivePursuit controller(6, 10,0.1, paths[0], false,
+            0.01, true, 4);
 
     TankOdometry::EncoderConfig encoderConfig;
 
@@ -19,7 +20,7 @@ TEST(AdaptivePurePursuit, FollowsStraightPath) {
     encoderConfig.wheelDiameter = (1 / PI);
 
     TankOdometry::GetInstance()->Initialize(encoderConfig, encoderConfig,
-                                            Pose(paths[0].getWaypoints()[0].getPoint(), Rotation2Dd(0)));
+                                            Pose(Vector2d(paths[0].getFirstWaypoint().position.getY(),-paths[0].getFirstWaypoint().position.getX()), Rotation2Dd(0)));
 
     double leftPosition = 0;
     double rightPosition = 0;
@@ -35,12 +36,12 @@ TEST(AdaptivePurePursuit, FollowsStraightPath) {
     for (double t = dt; t < 25; t += dt) {
         auto command = controller.Update(TankOdometry::GetInstance()->GetPose(), t);
 
-        leftPosition += (command.leftVelocity * dt);
-        rightPosition += (command.rightVelocity * dt);
+        leftPosition += (command.left * dt);
+        rightPosition += (command.right * dt);
 
         TankOdometry::GetInstance()->Update(leftPosition, rightPosition, 10);
 
-        fprintf(myfile, "%.1f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,\n", t, command.leftVelocity, command.rightVelocity,
+        fprintf(myfile, "%.1f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,\n", t, command.left, command.right,
                 leftPosition, rightPosition, TankOdometry::GetInstance()->GetPose().position.x(),
                 TankOdometry::GetInstance()->GetPose().position.y());
     }
@@ -58,7 +59,8 @@ TEST(AdaptivePurePursuit, FollowsSplinePath) {
 
     auto paths = PathManager::GetInstance()->GetPaths();
 
-    AdaptivePurePursuitController controller(paths[1], 4, 10.3, 0.01, 0.5);
+    AdaptivePursuit controller(6, 10,0.1, paths[1], false,
+                               0.01, true, 4);
 
     TankOdometry::EncoderConfig encoderConfig;
 
@@ -67,7 +69,7 @@ TEST(AdaptivePurePursuit, FollowsSplinePath) {
     encoderConfig.wheelDiameter = (1 / PI);
 
     TankOdometry::GetInstance()->Initialize(encoderConfig, encoderConfig,
-                                            Pose(paths[1].getWaypoints()[0].getPoint(), Rotation2Dd(0)));
+                                            Pose(Vector2d(paths[1].getFirstWaypoint().position.getY(),-paths[1].getFirstWaypoint().position.getX()), Rotation2Dd(0)));
 
     double leftPosition = 0;
     double rightPosition = 0;
@@ -83,12 +85,12 @@ TEST(AdaptivePurePursuit, FollowsSplinePath) {
     for (double t = dt; t < 25; t += dt) {
         auto command = controller.Update(TankOdometry::GetInstance()->GetPose(), t);
 
-        leftPosition += (command.leftVelocity * dt);
-        rightPosition += (command.rightVelocity * dt);
+        leftPosition += (command.left * dt);
+        rightPosition += (command.right * dt);
 
         TankOdometry::GetInstance()->Update(leftPosition, rightPosition, 10);
 
-        fprintf(myfile, "%.1f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,\n", t, command.leftVelocity, command.rightVelocity,
+        fprintf(myfile, "%.1f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,\n", t, command.left, command.right,
                 leftPosition, rightPosition, TankOdometry::GetInstance()->GetPose().position.x(),
                 TankOdometry::GetInstance()->GetPose().position.y());
     }

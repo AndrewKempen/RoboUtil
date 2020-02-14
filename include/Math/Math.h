@@ -8,6 +8,7 @@
 #endif
 
 #define kEpsilon .000000001
+#define kE .000000001
 
 using namespace std;
 

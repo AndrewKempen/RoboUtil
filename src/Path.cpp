@@ -1,136 +1,225 @@
 #include "Path.h"
-#include "../include/Path.h"
 
-Path::Path(string name, vector<Waypoint> waypoints) {
-    m_name = name;
-    m_waypoints = waypoints;
+Waypoint::Waypoint(Trans2d pos, double spd, string completeEvent) {
+	position = pos;
+	speed = spd;
+	event = completeEvent;
+}
 
-    m_length = 0;
-    m_distanceDownPath = 0;
+Path::Path() : Path({Waypoint(Trans2d(), 0)}, false) {
 
-    for(unsigned int i = 0; i < m_waypoints.size() - 1; i++) {
-        PathSegment segment = PathSegment(m_waypoints[i], m_waypoints[i + 1]);
-        m_pathSegments.push_back(segment);
-        m_length += segment.getLength();
+}
+
+Path::Path(vector<Waypoint> waypoints, bool flip) {
+	m_waypoints = waypoints;
+	for (int i = 0; i < m_waypoints.size() - 1; i++) {
+        m_segments.emplace_back(m_waypoints[i].position, m_waypoints[i+1].position,
+                                (flip ? m_waypoints[i].rotation.inverse() : m_waypoints[i].rotation),
+                                m_waypoints[i].speed);
+	}
+
+/*	if(m_waypoints.size() > 0){
+		if(m_waypoints[0].event != ""){
+			m_events.push_back(m_waypoints[0].event);
+		}
+		m_waypoints.erase(m_waypoints.begin());
+	}*/
+}
+
+Path Path::fromFile(string fileName, bool flip) {
+    Logger::logInfo("Loading File: " + fileName);
+    string fileStarter = "/home/lvuser/Paths/";
+    ifstream inFile(fileStarter + fileName);
+    if (inFile.is_open()) {
+        string text((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
+        return fromText(text, flip);
+    }
+    cout << "Failed to open: " << fileName << endl;
+    return Path();
+}
+
+Path Path::fromText(string text, bool flip) {
+    vector<Waypoint> points;
+    json json;
+    try {
+        json = json::parse(text);
+    } catch (const exception& e) {
+        Logger::logError("Error parsing json path! " + string(e.what()));
+        return Path();
     }
 
-    m_currentSegment = 0;
-    m_currentSegmentStart = 0;
-    if(!m_pathSegments.empty()) {
-        m_currentSegmentEnd = m_pathSegments[0].getLength();
-    } else {
-        m_currentSegmentEnd = 0;
+    //Logger::logInfo("Json text contents:\n" + json.dump(4));
+    try {
+        for (auto point : json) {
+            Waypoint waypoint({point["x"].get<double>(), point["y"].get<double>()}, 100);
+            if(flip) {
+                waypoint.position = waypoint.position.flipX();
+            }
+            if(point["name"].get<string>() != "point") {
+                waypoint.event = point["name"].get<string>();
+            }
+            points.push_back(waypoint);
+        }
+    } catch (const exception& e) {
+        Logger::logError("Error reading json path! " + string(e.what()));
+        return Path();
+    }
+
+    if(!points.empty()){
+        Logger::logInfo("Path with " + to_string(points.size()) + " points was loaded successfully.");
+        return Path(points);
+    } else{
+        Logger::logError("Loaded path text was empty!");
+        return Path();
     }
 }
 
-void Path::flipOverXAxis() {
+double Path::update(Trans2d pos) {
+	double rv = 0.0;
+	for(int i = 0; i < m_segments.size(); i++) {
+//		PathSegment segment = m_segments[i];
+		PathSegment::ClosestPointReport closestPointReport = m_segments[i].getClosestPoint(pos);
+//		cout << "Index " << closestPointReport.index << endl;
+		if (closestPointReport.index >= .99){
+			m_segments.erase(m_segments.begin() + i);
+			if(!m_waypoints.empty()){
+				if(!m_waypoints[0].event.empty()){
+					m_events.push_back(m_waypoints[0].event);
+				}
+				m_waypoints.erase(m_waypoints.begin());
+			}
+			return update(pos);
+		} else {
+			if(closestPointReport.index > 0.0){
+				m_segments[i].updateStart(closestPointReport.closestPoint);
+			}
 
+			rv = closestPointReport.distance;
+
+			if(m_segments.size() > i + 1){
+				PathSegment::ClosestPointReport nextClosestPointReport = m_segments[i+1].getClosestPoint(pos);
+				if(nextClosestPointReport.index > 0
+						&& nextClosestPointReport.index < .99
+						&& nextClosestPointReport.distance < rv){
+					m_segments[i+1].updateStart(nextClosestPointReport.closestPoint);
+					rv = nextClosestPointReport.distance;
+					m_segments.erase(m_segments.begin() + i);
+					if(!m_waypoints.empty()){
+						if(!m_waypoints[0].event.empty()){
+							m_events.push_back(m_waypoints[0].event);
+						}
+						m_waypoints.erase(m_waypoints.begin());
+					}
+				}
+			}
+			break;
+		}
+	}
+	return rv;
 }
 
-void Path::flipOverYAxis() {
-
+bool Path::eventPassed(string event) {
+	return (find(m_events.begin(), m_events.end(), event) != m_events.end());
 }
 
-void Path::addWaypoint(Waypoint waypoint) {
-    m_waypoints.push_back(waypoint);
-
-    PathSegment segment = PathSegment(m_waypoints[m_waypoints.size() - 2], m_waypoints[m_waypoints.size() - 1]);
-    m_pathSegments.push_back(segment);
-    m_length += segment.getLength();
+double Path::getRemainingLength() {
+	double length = 0.0;
+	for (auto i: m_segments){
+		length += i.getLength();
+	}
+	return length;
 }
 
-Path::PathReport Path::update(Vector2d robotPosition) {
-    PathSegment::closestPointReport report;
-    bool closestSegmentFound = false;
+PathSegment::Sample Path::getLookaheadPoint(Trans2d pos, double lookahead) {
+	if(m_segments.empty()){
+		return {Trans2d(), 0};
+	}
 
-    report = m_pathSegments[m_currentSegment].getClosestPoint(robotPosition, m_distanceDownPath - m_currentSegmentStart);
+	Trans2d posInverse = pos.inverse();
+	if(posInverse.translateBy(m_segments[0].getStart()).norm() >= lookahead){
+		return {m_segments[0].getStart(), m_segments[0].getSpeed()};
+	}
+	for (auto segment : m_segments) {
+        double distance = posInverse.translateBy(segment.getEnd()).norm();
+		if(distance >= lookahead){
+			pair<bool, Trans2d> intersectionPoint =
+                    getFirstCircleSegmentIntersection(segment, pos, lookahead);
+			if(intersectionPoint.first){
+				return {intersectionPoint.second, segment.getSpeed()};
+			} else {
+				cout << "Error? Bad things happened" << endl;
+			}
+		}
+	}
 
-    while (!closestSegmentFound) {
-        if (report.distanceToEnd < 0) { //Closest point is beyond current segment
-            if (m_currentSegment < m_pathSegments.size() - 1) { //There is another segment for us to check
-                m_currentSegmentStart += m_pathSegments[m_currentSegment].getLength();
-                m_currentSegment++;
-                report = m_pathSegments[m_currentSegment].getClosestPoint(robotPosition, m_distanceDownPath - m_currentSegmentStart);
-            } else { //No more segments left, so use current segment
-                closestSegmentFound = true;
-            }
-        } else { //Closest point might be on current segment
-            if (m_currentSegment < m_pathSegments.size() - 1) { //Make sure next segment is not closer
-                PathSegment::closestPointReport nextReport;
-                nextReport = m_pathSegments[m_currentSegment + 1].getClosestPoint(robotPosition, 0);
-                if (nextReport.distanceAway < report.distanceAway
-                    && nextReport.distanceToStart >= 0
-                    && nextReport.distanceToEnd > 0) {
-                    m_currentSegmentStart += m_pathSegments[m_currentSegment].getLength();
-                    m_currentSegment++;
-                    report = nextReport;
-                } else { //Next segment is farther away, so it must be this segment
-                    closestSegmentFound = true;
-                }
-            } else { //Hurray! Closest point is on this segment!
-                closestSegmentFound = true;
-            }
+	PathSegment lastSegment = m_segments[m_segments.size() - 1];
+	PathSegment newLastSegment = PathSegment(lastSegment.getStart(), lastSegment.interpolate(10000),
+                                             lastSegment.getAngle(), lastSegment.getSpeed());
+	pair<bool, Trans2d> intersectionPoint = getFirstCircleSegmentIntersection(newLastSegment, pos,
+			lookahead);
+	if(intersectionPoint.first){
+		return {intersectionPoint.second, lastSegment.getSpeed()};
+	} else {
+		cout << "Error? REALLY Bad things happened" << endl;
+		return {lastSegment.getEnd(), lastSegment.getSpeed()};
+	}
+}
+
+pair<bool, Trans2d> Path::getFirstCircleSegmentIntersection(PathSegment segment, Trans2d center,
+                                                                       double radius) {
+	double x1 = segment.getStart().getX() - center.getX();
+	double y1 = segment.getStart().getY() - center.getY();
+	double x2 = segment.getEnd().getX() - center.getX();
+	double y2 = segment.getEnd().getY() - center.getY();
+	double dx = x2 - x1;
+	double dy = y2 - y1;
+	double drSquared = dx * dx + dy * dy;
+	double det = x1 * y2 - x2 * y1;
+
+	double discriminant = drSquared *radius * radius - det * det;
+	if (discriminant < 0) {
+		return {false, Trans2d()};
+	}
+
+	double sqrtDiscriminant = sqrt(discriminant);
+	Trans2d posSolution = Trans2d(
+			(det * dy + ((dy < 0) ? -1 : 1) * dx * sqrtDiscriminant) / drSquared + center.getX(),
+			(-det * dx + abs(dy) * sqrtDiscriminant) / drSquared + center.getY());
+	Trans2d negSolution = Trans2d(
+			(det * dy - ((dy < 0) ? -1 : 1) * dx * sqrtDiscriminant) / drSquared + center.getX(),
+			(-det * dx - abs(dy) * sqrtDiscriminant) / drSquared + center.getY());
+
+	double posDot = segment.dotProduct(posSolution);
+	double negDot = segment.dotProduct(negSolution);
+	if (posDot < 0 && negDot >= 0){
+		return {true, negSolution};
+	} else if (posDot >= 0 && negDot < 0){
+		return {true, posSolution};
+	} else {
+		if (abs(posDot) <= abs(negDot)){
+			return {true, posSolution};
+		} else {
+			return {true, negSolution};
+		}
+	}
+}
+
+Waypoint Path::getFirstWaypoint() {
+    return m_waypoints[0];
+}
+
+Position2d Path::getClosestPoint(Trans2d pos) {
+    Position2d closestPoint = Position2d(m_segments[0].getStart(), m_segments[0].getAngle());
+    double closestDistance = hypot(pos.getX() - closestPoint.getTranslation().getX(),
+                                   pos.getY() - closestPoint.getTranslation().getY());
+    for (unsigned int i = 1; i < m_segments.size(); i++){
+        PathSegment segment = m_segments[i];
+        double distance = hypot(pos.getX() - segment.getStart().getX(),
+                                pos.getY() - segment.getStart().getY());
+        if(distance < closestDistance) {
+            closestPoint = Position2d(segment.getStart(), segment.getAngle());
+            closestDistance = distance;
         }
     }
-
-    m_distanceDownPath += report.distanceToStart;
-
-    PathReport pathReport;
-    pathReport.speed = report.speed;
-    pathReport.closestPoint = report.closestPoint;
-    pathReport.distanceAway = report.distanceAway;
-
-    return pathReport;
-}
-
-Vector2d Path::findCircularIntersection(Vector2d center, double radius) {
-    if (m_pathSegments.empty()) {
-        Logger::logError("Path is empty");
-        return center;
-    }
-
-    Vector2d centerToStart = m_pathSegments[0].getStart() - center;
-    if(centerToStart.norm() >= radius) {
-        //We are way before first point
-        return m_pathSegments[0].getStart();
-    }
-
-    for (unsigned int i = m_currentSegment; i < m_pathSegments.size(); i++) {
-        PathSegment segment = m_pathSegments[i];
-        Vector2d centerToSegmentEnd = center - segment.getEnd();
-        if (centerToSegmentEnd.norm() > radius) {
-            //Gotcha! Somewhere on this segment must be the circular intersection point
-            Vector2d intersectionPoint = segment.getCircularIntersectionPoint(center, radius);
-
-            if(intersectionPoint != center) {
-                return intersectionPoint;
-            } else {
-                Logger::logError("Couldn't find circular intersection point on path!");
-            }
-        }
-    }
-
-    //We might be at the end of the path, so try finding an intersection point by extending the last segment
-    PathSegment newLastSegment = m_pathSegments[m_pathSegments.size() - 1];
-    newLastSegment.extend(radius);
-    Vector2d intersectionPoint = newLastSegment.getCircularIntersectionPoint(center, radius);
-
-    if(intersectionPoint != center) {
-        return intersectionPoint;
-    } else {
-        Logger::logError("Couldn't find circular intersection point even by extending last segment?");
-    }
-    return center;
-}
-
-double Path::GetDistanceRemaining() {
-    return m_length - m_distanceDownPath;
-}
-
-vector<Waypoint> Path::getWaypoints() {
-    return m_waypoints;
-}
-
-vector<PathSegment> Path::getPathSegments() {
-    return m_pathSegments;
+    return closestPoint;
 }

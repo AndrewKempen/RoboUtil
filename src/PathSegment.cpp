@@ -1,110 +1,65 @@
 #include "PathSegment.h"
 
-PathSegment::PathSegment(Waypoint startPoint, Waypoint endPoint) {
-    m_start = startPoint.getPoint();
-    m_end = endPoint.getPoint();
-
-    //Pre-calculate to increase speed
-    m_startToEnd = m_end - m_start;
-    m_length = m_startToEnd.norm();
-    m_startToEndUnit = m_startToEnd / m_length;
-
-    m_startSpeed = startPoint.getSpeed();
-    m_endSpeed = endPoint.getSpeed();
-
-    m_distanceToSpeedFactor = (m_endSpeed - m_startSpeed) / m_length;
-
-    m_stateCommand = startPoint.getStateCommand();
+PathSegment::Sample::Sample(Trans2d newTranslation, double newSpeed) {
+	translation = newTranslation;
+	speed = newSpeed;
 }
 
-Vector2d PathSegment::getStart() {
-    return m_start;
+PathSegment::PathSegment(Trans2d start, Trans2d end, Rotation2d angle, double speed) {
+	m_end = end;
+	m_speed = speed;
+    m_angle = angle;
+	updateStart(start);
 }
 
-Vector2d PathSegment::getEnd() {
-    return m_end;
+void PathSegment::updateStart(Trans2d newStart) {
+	m_start = newStart;
+	m_startToEnd = m_start.inverse().translateBy(m_end);
+	m_length = m_startToEnd.norm();
+//	std::cout << "New Length: " << m_length << std::endl;
+}
+
+double PathSegment::getSpeed() {
+	return m_speed;
+}
+
+Trans2d PathSegment::getStart() {
+	return m_start;
+}
+
+Trans2d PathSegment::getEnd() {
+	return m_end;
 }
 
 double PathSegment::getLength() {
-    return m_length;
+	return m_length;
 }
 
-PathSegment::closestPointReport PathSegment::getClosestPoint(Vector2d otherPoint, double minimumDistanceFromStart) {
-    if(minimumDistanceFromStart > m_length) {
-        cout << "Error minimum dist" << endl;
-    }
-    Vector2d startToMinimum = m_startToEndUnit * minimumDistanceFromStart;
-    Vector2d minimum = m_start + startToMinimum;
-    Vector2d minimumToEnd = m_end - minimum;
-    double length = minimumToEnd.norm();
-
-    closestPointReport report;
-    if(length > 0) {
-        Vector2d minimumToOther = otherPoint - minimum;
-
-        double dotProduct = minimumToEnd.dot(minimumToOther);
-        if (dotProduct <= 0) { //Closest point is behind minimum
-            report.distanceToStart = 0;
-            report.closestPoint = minimum;
-            report.distanceToEnd = length;
-        } else {
-            Vector2d minimumToClosest = dotProduct / (minimumToEnd.squaredNorm()) * minimumToEnd;
-
-            double distFromMinimum = minimumToClosest.norm();
-
-            report.distanceToStart = distFromMinimum;
-            report.distanceToEnd = length - report.distanceToStart;
-
-            report.closestPoint = minimum + minimumToClosest; //Closest point on path segment
-        }
-    } else {
-        report.distanceToEnd = length;
-        report.closestPoint = minimum;
-        cout << "Error, length < 0" << endl;
-    }
-    Vector2d closestToOther = otherPoint - report.closestPoint;
-    report.distanceAway = closestToOther.norm();
-    report.speed = getSpeed(report.distanceToStart + minimumDistanceFromStart);
-    return report;
+Trans2d PathSegment::interpolate(double index) {
+	return m_start.interpolate(m_end, index);
 }
 
-double PathSegment::getSpeed(double distanceFromStart) {
-    return m_startSpeed + distanceFromStart * m_distanceToSpeedFactor;
+double PathSegment::dotProduct(Trans2d other) {
+	Trans2d startToOther = m_start.inverse().translateBy(other);
+	return m_startToEnd.getX() * startToOther.getX() + m_startToEnd.getY() * startToOther.getY();
 }
 
-Vector2d PathSegment::getCircularIntersectionPoint(Vector2d center, double radius) {
-    //Solution borrowed from https://stackoverflow.com/questions/1073336/circle-line-segment-collision-detection-algorithm/1084899#1084899
-
-    Vector2d centerToStart = m_start - center;
-    double a = m_startToEnd.dot(m_startToEnd);
-    double b = 2 * centerToStart.dot(m_startToEnd);
-    double c = centerToStart.dot(centerToStart) - (radius * radius);
-    double discriminant = (b * b) - (4 * a * c);
-
-//    Logger::logInfo("Discriminant: " + to_string(discriminant));
-//    Logger::logInfo("A: " + to_string(a));
-//    Logger::logInfo("B: " + to_string(b));
-//    Logger::logInfo("C: " + to_string(c));
-
-    if (discriminant < 0) {
-        return center; //No intersection
-    } else {
-        discriminant = sqrt(discriminant);
-
-        double solution1 = (-b - discriminant) / (2 * a);
-        if (solution1 >= 0 && solution1 <= 1) {
-            return m_start + solution1 * m_startToEnd;
-        }
-
-        double solution2 = (-b + discriminant) / (2 * a);
-        if (solution2 >= 0 && solution2 <= 1) {
-            return m_start + solution2 * m_startToEnd;
-        }
-
-        return center; //No intersection exists
-    }
+PathSegment::ClosestPointReport PathSegment::getClosestPoint(Trans2d queryPoint) {
+	ClosestPointReport rv;
+	if (m_length > kE){
+		double dot = dotProduct(queryPoint);
+		rv.index = dot / (m_length * m_length);
+		rv.clampedIndex = min(1.0, max(0.0, rv.index));
+		rv.closestPoint = interpolate(rv.index);
+	} else {
+		rv.index = 0.0;
+		rv.clampedIndex = 0.0;
+		rv.closestPoint = Trans2d(m_start);
+	}
+	rv.distance = rv.closestPoint.inverse().translateBy(queryPoint).norm();
+	return rv;
 }
 
-void PathSegment::extend(double lengthToExtendBy) {
-    m_end += m_startToEndUnit * lengthToExtendBy;
+Rotation2d PathSegment::getAngle() {
+    return m_angle;
 }

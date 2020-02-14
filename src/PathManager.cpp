@@ -1,4 +1,3 @@
-#include "Waypoint.h"
 #include "PathManager.h"
 
 PathManager* PathManager::m_instance = nullptr;
@@ -37,12 +36,12 @@ bool PathManager::LoadPaths(json loadedJson) {
             string name = path["name"];
             vector<Waypoint> waypoints;
             for (auto point : path["points"]) {
-                Vector2d point1 = Vector2d(point["x"], point["y"]);
                 double speed = point["speed"];
-                Waypoint waypoint(point1, speed); //TODO: Implement state command logic
+                Trans2d pos = Trans2d(-(double)point["y"], (double)point["x"]);
+                Waypoint waypoint = Waypoint(pos, speed, "");
                 waypoints.push_back(waypoint);
             }
-            Path newPath(name, waypoints);
+            Path newPath(waypoints);
             m_paths.push_back(newPath);
         }
     } catch (const exception& e) {

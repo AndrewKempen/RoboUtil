@@ -1,41 +1,42 @@
 #pragma once
 
-#include "Waypoint.h"
-#include "Logger.h"
-#include <Eigen/Dense>
+#include "Position2d.h"
 
-using namespace Eigen;
+class PathSegment{
+public:
+	struct Sample{
+		Trans2d translation;
+		double speed;
+		Sample(Trans2d newTranslation, double newSpeed);
+	};
 
-class PathSegment {
-private:
-    Vector2d m_start, m_end;
-    Vector2d m_startToEnd;
-    Vector2d m_startToEndUnit;
-    double m_startSpeed;
-    double m_endSpeed;
-    double m_distanceToSpeedFactor;
-    double m_length, m_lengthSquared;
-    string m_stateCommand;
-
+protected:
+	double m_speed;
+	Trans2d m_start;
+	Trans2d m_end;
+	Trans2d m_startToEnd;
+	Rotation2d m_angle;
+	double m_length;
 
 public:
-    struct closestPointReport {
-        Vector2d closestPoint;
-        double distanceToStart;
-        double distanceToEnd;
-        double distanceAway;
-        double speed;
-    };
-    PathSegment(Waypoint startPoint, Waypoint endPoint);
-    Vector2d getStart();
-    Vector2d getEnd();
-    double getLength();
-    double getSpeed(double distanceFromStart);
-    closestPointReport getClosestPoint(Vector2d otherPoint, double minimumDistanceFromStart);
-    Vector2d getCircularIntersectionPoint(Vector2d center, double radius);
-    void extend(double lengthToExtendBy);
+	struct ClosestPointReport{
+		double index;
+		double clampedIndex;
+		Trans2d closestPoint;
+		double distance;
+	};
 
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	PathSegment(Trans2d start, Trans2d end, Rotation2d angle, double speed);
+
+	void updateStart(Trans2d newStart);
+
+	double getSpeed();
+	Trans2d getStart();
+	Trans2d getEnd();
+	double getLength();
+	Rotation2d getAngle();
+
+	Trans2d interpolate(double index);
+	double dotProduct(Trans2d other);
+	ClosestPointReport getClosestPoint(Trans2d queryPoint);
 };
-
-
