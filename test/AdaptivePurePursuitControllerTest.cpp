@@ -10,14 +10,14 @@ TEST(AdaptivePurePursuit, FollowsStraightPath) {
 
     auto paths = PathManager::GetInstance()->GetPaths();
 
-    AdaptivePursuit controller(6, 10,0.1, paths[0], false,
-            0.01, true, 4);
+    AdaptivePursuit controller(10, 0.1, 0.1, paths[0], false,
+            0.01, true, 3.25);
 
     TankOdometry::EncoderConfig encoderConfig;
 
     encoderConfig.initialTicks = 0;
-    encoderConfig.ticksPerWheelRevolution = 1;
-    encoderConfig.wheelDiameter = (1 / PI);
+    encoderConfig.ticksPerWheelRevolution = 360;
+    encoderConfig.wheelDiameter = 3.25;
 
     TankOdometry::GetInstance()->Initialize(encoderConfig, encoderConfig,
                                             Pose(Vector2d(paths[0].getFirstWaypoint().position.getY(),-paths[0].getFirstWaypoint().position.getX()), Rotation2Dd(0)));
@@ -36,8 +36,8 @@ TEST(AdaptivePurePursuit, FollowsStraightPath) {
     for (double t = dt; t < 25; t += dt) {
         auto command = controller.Update(TankOdometry::GetInstance()->GetPose(), t);
 
-        leftPosition += (command.left * dt);
-        rightPosition += (command.right * dt);
+        leftPosition += (command.left * dt) * 100 / 60 * 360;
+        rightPosition += (command.right * dt) * 100 / 60 * 360;
 
         TankOdometry::GetInstance()->Update(leftPosition, rightPosition, 10);
 

@@ -1,4 +1,5 @@
 #include "Path.h"
+#include "../include/Path.h"
 
 Waypoint::Waypoint(Trans2d pos, double spd, string completeEvent) {
 	position = pos;
@@ -222,4 +223,8 @@ Position2d Path::getClosestPoint(Trans2d pos) {
         }
     }
     return closestPoint;
+}
+
+vector<Waypoint> Path::getWaypoints() {
+    return m_waypoints;
 }

@@ -18,7 +18,6 @@ AdaptivePursuit::AdaptivePursuit(double fixedLookahead, double maxAccel,
     m_lastTime = 0.0;
     m_gradualStop = gradualStop;
     m_wheelDiameter = wheelDiameter;
-
 }
 
 bool AdaptivePursuit::isDone() {

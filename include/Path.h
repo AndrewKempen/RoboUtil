@@ -31,6 +31,7 @@ public:
 	double update(Trans2d pos);
 	bool eventPassed(string event);
 	double getRemainingLength();
+    vector<Waypoint> getWaypoints();
 	PathSegment::Sample getLookaheadPoint(Trans2d pos, double lookahead);
 	pair<bool, Trans2d> getFirstCircleSegmentIntersection(PathSegment segment, Trans2d center,
                                                           double radius);
