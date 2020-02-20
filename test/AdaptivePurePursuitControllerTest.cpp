@@ -10,7 +10,7 @@ TEST(AdaptivePurePursuit, FollowsStraightPath) {
 
     auto paths = PathManager::GetInstance()->GetPaths();
 
-    AdaptivePursuit controller(10, 0.1, 0.1, paths[0], false,
+    AdaptivePursuit controller(10, 0.1, 0.1, paths["FirstPath"], false,
             0.01, true, 3.25);
 
     TankOdometry::EncoderConfig encoderConfig;
@@ -20,7 +20,7 @@ TEST(AdaptivePurePursuit, FollowsStraightPath) {
     encoderConfig.wheelDiameter = 3.25;
 
     TankOdometry::GetInstance()->Initialize(encoderConfig, encoderConfig,
-                                            Pose(Vector2d(paths[0].getFirstWaypoint().position.getY(),-paths[0].getFirstWaypoint().position.getX()), Rotation2Dd(0)));
+                                            Pose(Vector2d(paths["FirstPath"].getFirstWaypoint().position.getY(),-paths["FirstPath"].getFirstWaypoint().position.getX()), Rotation2Dd(0)));
 
     double leftPosition = 0;
     double rightPosition = 0;
@@ -59,7 +59,7 @@ TEST(AdaptivePurePursuit, FollowsSplinePath) {
 
     auto paths = PathManager::GetInstance()->GetPaths();
 
-    AdaptivePursuit controller(6, 10,0.1, paths[1], false,
+    AdaptivePursuit controller(6, 10,0.1, paths["TestPath"], false,
                                0.01, true, 4);
 
     TankOdometry::EncoderConfig encoderConfig;
@@ -69,7 +69,7 @@ TEST(AdaptivePurePursuit, FollowsSplinePath) {
     encoderConfig.wheelDiameter = (1 / PI);
 
     TankOdometry::GetInstance()->Initialize(encoderConfig, encoderConfig,
-                                            Pose(Vector2d(paths[1].getFirstWaypoint().position.getY(),-paths[1].getFirstWaypoint().position.getX()), Rotation2Dd(0)));
+                                            Pose(Vector2d(paths["TestPath"].getFirstWaypoint().position.getY(),-paths["TestPath"].getFirstWaypoint().position.getX()), Rotation2Dd(0)));
 
     double leftPosition = 0;
     double rightPosition = 0;

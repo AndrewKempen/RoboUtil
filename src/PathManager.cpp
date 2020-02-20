@@ -28,7 +28,7 @@ bool PathManager::LoadPathsText(string text) {
 }
 
 bool PathManager::LoadPaths(json loadedJson) {
-    m_paths = vector<Path>();
+    m_paths.clear();
 
     try {
         json pathJson;
@@ -42,7 +42,7 @@ bool PathManager::LoadPaths(json loadedJson) {
                 waypoints.push_back(waypoint);
             }
             Path newPath(waypoints);
-            m_paths.push_back(newPath);
+            m_paths[name] = newPath;
         }
     } catch (const exception& e) {
         Logger::logError("Error reading json path! " + string(e.what()));
@@ -78,6 +78,13 @@ bool PathManager::LoadPathsFile(string filePath) {
     return LoadPaths(loadedJson);
 }
 
-vector<Path> PathManager::GetPaths() {
+unordered_map<string, Path> PathManager::GetPaths() {
     return m_paths;
+}
+
+Path PathManager::GetPath(string name) {
+    if (m_paths.find(name) == m_paths.end())
+        Logger::logError("Path with key: " + name + " not found!");
+    else
+        return m_paths[name];
 }

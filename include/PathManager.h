@@ -2,6 +2,7 @@
 
 #include "Path.h"
 #include <memory>
+#include <unordered_map>
 #include <fstream>
 
 class PathManager {
@@ -14,11 +15,13 @@ public:
 
     int NumPaths();
 
-    vector<Path> GetPaths();
+    unordered_map<string, Path> GetPaths();
+
+    Path GetPath(string name);
 
 private:
     PathManager() = default;
-    vector<Path> m_paths;
+    unordered_map<string, Path> m_paths;
     static PathManager* m_instance;
 };
 
